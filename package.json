@@ -1,0 +1,19 @@
+{
+  "name": "telegram-emoji-premium-bot",
+  "version": "1.0.0",
+  "description": "Bot Telegram pour générer des emojis/stickers stylés (texte, couleur, effets)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": ["telegram", "bot", "emoji", "sticker", "telegraf"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "dotenv": "^16.4.5",
+    "canvas": "^2.11.2",
+    "fs-extra": "^11.2.0"
+  }
+}
