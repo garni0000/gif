@@ -1,42 +1,52 @@
 const TelegramBot = require('node-telegram-bot-api');
 
-// 🔴 METS TON TOKEN ICI
+// 🔴 REMPLACE PAR TON TOKEN
 const token = '8199409809:AAGfBC9IPCiKqb5xv5PnsX9P9losXdUnwxU';
 const bot = new TelegramBot(token, { polling: true });
 
-console.log("🚀 Bot de clonage public en ligne...");
+console.log("🚀 Bot Clonneur de Médias (Sans Légende) en ligne...");
 
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
 
-    // On cherche un lien t.me (ex: https://t.me/nom_du_canal/123)
     if (text && text.includes('t.me/')) {
         try {
-            // Nettoyage du lien pour extraire les infos
             const url = new URL(text);
             const pathParts = url.pathname.split('/').filter(p => p !== ''); 
             
-            // pathParts[0] = le nom du canal (ex: durov)
-            // pathParts[1] = l'ID du message (ex: 209)
             const channelUsername = `@${pathParts[0]}`;
-            const messageId = pathParts[1];
+            const messageId = parseInt(pathParts[1]);
 
-            if (!messageId) {
-                return bot.sendMessage(chatId, "❌ Le lien doit pointer vers un message précis (ex: https://t.me/username/123)");
+            bot.sendMessage(chatId, "⏳ Analyse du média...");
+
+            // On récupère les infos du message source
+            // Note: getChatPost est limité, donc on utilise forward temporairement pour "voir" le contenu
+            const tempMsg = await bot.forwardMessage(chatId, channelUsername, messageId);
+
+            // On identifie le média et on le renvoie SANS légende (caption)
+            if (tempMsg.photo) {
+                const photoId = tempMsg.photo[tempMsg.photo.length - 1].file_id;
+                await bot.sendPhoto(chatId, photoId);
+            } 
+            else if (tempMsg.video) {
+                await bot.sendVideo(chatId, tempMsg.video.file_id);
+            } 
+            else if (tempMsg.document) {
+                await bot.sendDocument(chatId, tempMsg.document.file_id);
+            } 
+            else if (tempMsg.animation) {
+                await bot.sendAnimation(chatId, tempMsg.animation.file_id);
+            } else {
+                bot.sendMessage(chatId, "ℹ️ Ce message ne contient pas d'image ou de vidéo compatible.");
             }
 
-            bot.sendMessage(chatId, `🔄 Clonage du message ${messageId} depuis ${channelUsername}...`);
-
-            // La méthode magique : copyMessage
-            // Contrairement à forwardMessage, copyMessage ne montre pas la source originale.
-            await bot.copyMessage(chatId, channelUsername, messageId);
+            // On supprime le message transféré pour ne laisser que le "clone" propre
+            await bot.deleteMessage(chatId, tempMsg.message_id);
 
         } catch (error) {
             console.error(error);
-            bot.sendMessage(chatId, "⚠️ Impossible de cloner. Vérifie que le canal est bien PUBLIC et que le lien est correct.");
+            bot.sendMessage(chatId, "❌ Erreur : Vérifie que le lien est PUBLIC. Si c'est un canal privé, je ne peux pas voir le contenu.");
         }
-    } else if (text === '/start') {
-        bot.sendMessage(chatId, "Envoyez-moi un lien de message d'un canal PUBLIC pour que je le copie ici !");
     }
 });
