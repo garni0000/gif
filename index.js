@@ -1,42 +1,44 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
-const { createCanvas } = require('canvas');
-const fs = require('fs');
+const sharp = require('sharp');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.start((ctx) => {
-  ctx.reply("👋 Envoie /create TEXTE pour générer un emoji stylé !");
+  ctx.reply("🔥 Envoie /create TEXTE pour générer ton emoji !");
 });
 
 bot.command('create', async (ctx) => {
   const text = ctx.message.text.split(' ').slice(1).join(' ');
-  if (!text) return ctx.reply("❌ Mets un texte !");
+  if (!text) return ctx.reply("❌ Mets un texte");
 
-  const canvas = createCanvas(512, 512);
-  const c = canvas.getContext('2d');
+  try {
+    const svg = `
+    <svg width="512" height="512">
+      <defs>
+        <linearGradient id="grad">
+          <stop offset="0%" stop-color="#ff00ff"/>
+          <stop offset="100%" stop-color="#00ffff"/>
+        </linearGradient>
+      </defs>
+      <rect width="512" height="512" fill="url(#grad)"/>
+      <text x="50%" y="50%" font-size="80" fill="white"
+        text-anchor="middle" dominant-baseline="middle"
+        font-family="Arial" font-weight="bold">
+        ${text}
+      </text>
+    </svg>
+    `;
 
-  // fond dégradé
-  const grad = c.createLinearGradient(0, 0, 512, 512);
-  grad.addColorStop(0, '#ff00ff');
-  grad.addColorStop(1, '#00ffff');
-  c.fillStyle = grad;
-  c.fillRect(0, 0, 512, 512);
+    const img = await sharp(Buffer.from(svg)).png().toBuffer();
 
-  // texte
-  c.fillStyle = "#fff";
-  c.font = "bold 80px Arial";
-  c.textAlign = "center";
-  c.textBaseline = "middle";
-  c.fillText(text, 256, 256);
+    await ctx.replyWithPhoto({ source: img });
 
-  const buffer = canvas.toBuffer();
-  fs.writeFileSync('emoji.png', buffer);
-
-  await ctx.replyWithPhoto({ source: 'emoji.png' });
-
-  fs.unlinkSync('emoji.png');
+  } catch (e) {
+    console.log(e);
+    ctx.reply("Erreur ❌");
+  }
 });
 
 bot.launch();
-console.log("Bot canvas lancé ✅");
+console.log("Bot lancé ✅");
