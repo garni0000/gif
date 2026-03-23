@@ -1,39 +1,42 @@
-require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 
-const token = process.env.TELEGRAM_TOKEN;
+// 🔴 METS TON TOKEN ICI
+const token = '8199409809:AAGfBC9IPCiKqb5xv5PnsX9P9losXdUnwxU';
 const bot = new TelegramBot(token, { polling: true });
 
-// Dictionnaires de styles
-const styles = {
-    bubbles: {
-        a: 'ⓐ', b: 'ⓑ', c: 'ⓒ', d: 'ⓓ', e: 'ⓔ', f: 'ⓕ', g: 'ⓖ', h: 'ⓗ', i: 'ⓘ', j: 'ⓙ', k: 'ⓚ', l: 'ⓛ', m: 'ⓜ', 
-        n: 'ⓝ', o: 'ⓞ', p: 'ⓟ', q: 'ⓠ', r: 'ⓡ', s: 'ⓢ', t: 'ⓣ', u: 'ⓤ', v: 'ⓥ', w: 'ⓦ', x: 'ⓧ', y: 'ⓨ', z: 'ⓩ'
-    },
-    bold: {
-        a: '𝐚', b: '𝐛', c: '𝐜', d: '𝐝', e: '𝐞', f: '𝐟', g: '𝐠', h: '𝐡', i: '𝐢', j: '𝐣', k: '𝐤', l: '𝐥', m: '𝐦', 
-        n: '𝐧', o: '𝐨', p: '𝐩', q: '𝐪', r: '𝐫', s: '𝐬', t: '𝐭', u: '𝐮', v: '𝐯', w: '𝐰', x: '𝐱', y: '𝐲', z: '𝐳'
+console.log("🚀 Bot de clonage public en ligne...");
+
+bot.on('message', async (msg) => {
+    const chatId = msg.chat.id;
+    const text = msg.text;
+
+    // On cherche un lien t.me (ex: https://t.me/nom_du_canal/123)
+    if (text && text.includes('t.me/')) {
+        try {
+            // Nettoyage du lien pour extraire les infos
+            const url = new URL(text);
+            const pathParts = url.pathname.split('/').filter(p => p !== ''); 
+            
+            // pathParts[0] = le nom du canal (ex: durov)
+            // pathParts[1] = l'ID du message (ex: 209)
+            const channelUsername = `@${pathParts[0]}`;
+            const messageId = pathParts[1];
+
+            if (!messageId) {
+                return bot.sendMessage(chatId, "❌ Le lien doit pointer vers un message précis (ex: https://t.me/username/123)");
+            }
+
+            bot.sendMessage(chatId, `🔄 Clonage du message ${messageId} depuis ${channelUsername}...`);
+
+            // La méthode magique : copyMessage
+            // Contrairement à forwardMessage, copyMessage ne montre pas la source originale.
+            await bot.copyMessage(chatId, channelUsername, messageId);
+
+        } catch (error) {
+            console.error(error);
+            bot.sendMessage(chatId, "⚠️ Impossible de cloner. Vérifie que le canal est bien PUBLIC et que le lien est correct.");
+        }
+    } else if (text === '/start') {
+        bot.sendMessage(chatId, "Envoyez-moi un lien de message d'un canal PUBLIC pour que je le copie ici !");
     }
-};
-
-function applyStyle(text, alphabet) {
-    return text.toLowerCase().split('').map(char => alphabet[char] || char).join('');
-}
-
-bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, "Envoie-moi un mot et je vais le rendre stylé !");
 });
-
-bot.on('message', (msg) => {
-    if (msg.text && !msg.text.startsWith('/')) {
-        const text = msg.text;
-        const resBubbles = applyStyle(text, styles.bubbles);
-        const resBold = applyStyle(text, styles.bold);
-
-        bot.sendMessage(msg.chat.id, `Voici ton texte stylé :\n\n` + 
-            `Bulles : \`${resBubbles}\` (clique pour copier)\n` +
-            `Gras : \`${resBold}\` (clique pour copier)`, { parse_mode: 'Markdown' });
-    }
-});
-
-console.log("🚀 Bot de texte stylé démarré !");
