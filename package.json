@@ -1,22 +1,14 @@
 {
   "name": "telegram-emoji-bot",
   "version": "1.0.0",
-  "description": "Bot Telegram pour générer des Custom Emojis Pro",
+  "description": "Bot Telegram pour emojis personnalisés Pro",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js"
   },
-  "keywords": [
-    "telegram",
-    "bot",
-    "emoji",
-    "canvas"
-  ],
-  "author": "Ton Nom",
-  "license": "ISC",
   "dependencies": {
-    "canvas": "^3.0.0",
+    "canvas": "^2.11.2",
     "dotenv": "^16.4.5",
     "node-telegram-bot-api": "^0.66.0"
   }
